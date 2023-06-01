@@ -1,7 +1,7 @@
 int[][] board;
 int winner = 0, shifts = 0, num_Start = (int)(Math.random()*2), chckWin;
 int player = 1, x, y, cont, cont2 = 0;
-int IA = -1, aux = 0, aux2 = 0, board_Choose = (int)(Math.random()*4), num1, num2; //<>//
+int IA = -1, aux = 0, aux2 = 0, board_Choose = (int)(Math.random()*4), num1, num2;
 PFont f;
 String msg;
 
@@ -266,7 +266,7 @@ void checkGameEnd() {
   }
 }
 
-int minimax(int depth, int turn) {
+int minimax(int depth, int turn, int alpha, int beta, int currentPlayer) {
   if (checkWinIA()) {
     return -1;
   }
@@ -277,52 +277,60 @@ int minimax(int depth, int turn) {
     return 0;
   }
 
-  int bestScore;
   if (turn == IA) {
-    bestScore = Integer.MIN_VALUE;
+    int bestScore = Integer.MIN_VALUE;
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
         if (board[i][j] == 0) {
           board[i][j] = IA;
           shifts++;
-          int score = minimax(depth + 1, player);
+          int score = minimax(depth + 1, currentPlayer, alpha, beta, currentPlayer);
           board[i][j] = 0;
           shifts--;
           bestScore = max(score, bestScore);
+          alpha = max(alpha, bestScore);
+          if (beta <= alpha) {
+            break;
+          }
         }
       }
     }
+    return bestScore;
   } else {
-    bestScore = Integer.MAX_VALUE;
+    int bestScore = Integer.MAX_VALUE;
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
         if (board[i][j] == 0) {
-          board[i][j] = player;
+          board[i][j] = currentPlayer;
           shifts++;
-          int score = minimax(depth + 1, IA);
+          int score = minimax(depth + 1, IA, alpha, beta, currentPlayer);
           board[i][j] = 0;
           shifts--;
           bestScore = min(score, bestScore);
+          beta = min(beta, bestScore);
+          if (beta <= alpha) {
+            break;
+          }
         }
       }
     }
+    return bestScore;
   }
-
-  return bestScore;
 }
 
-// Función para que la IA realice su jugada usando el algoritmo Minimax
 void playIA() {
   int bestScore = Integer.MIN_VALUE;
   int bestX = -1;
   int bestY = -1;
+  int alpha = Integer.MIN_VALUE;
+  int beta = Integer.MAX_VALUE;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       if (board[i][j] == 0) {
         board[i][j] = IA;
         shifts++;
-        int score = minimax(0, player);
+        int score = minimax(0, player, alpha, beta, player);
         board[i][j] = 0;
         shifts--;
         if (score > bestScore) {
@@ -334,10 +342,10 @@ void playIA() {
     }
   }
 
-  if (bestX != -1 && bestY != -1) {
-    board[bestY][bestX] = IA;
-  }
+  // Realizar la jugada de la IA en las coordenadas (bestX, bestY)
+  board[bestY][bestX] = IA;
 }
+
 
 // Esta funciona revisa si sigue el jugador o la IA y quien empieza
 void validate(){
